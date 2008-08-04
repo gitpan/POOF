@@ -1,0 +1,8 @@
+Revision history for Perl extension POOF.
+
+0.01  Tue Apr  1 12:00:23 2008
+	- original version; created by h2xs 1.23 with options
+		-AX -b 5.6.0 -n POOF
+        
+1.0   Many changes and new features, more info to come in the future.
+
