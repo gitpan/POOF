@@ -10,15 +10,17 @@ WriteMakefile(
         Attribute::Handlers => 0,
         Scalar::Util => 0,
         Data::Dumper => 0,
+        B::Deparse => 0,
         Carp => 0,
         Digest::MD5 => 0,
         Class::ISA => 0,
         Test::More => 0,
+        Tie::IxHash => 0,
     },
     (
-        $] >= 5.005
+        $] >= 5.006
             ? ( ABSTRACT_FROM  => 'lib/POOF.pm', # retrieve abstract from module
-                AUTHOR         => 'Benny Millares <benny@millaresdesign.com>' )
+                AUTHOR         => 'Benny Millares <bmillares@cpan.org>' )
             : ( )
     ),
 );

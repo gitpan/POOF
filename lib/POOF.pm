@@ -15,7 +15,7 @@ use Class::ISA;
 use POOF::Properties;
 use POOF::DataType;
 
-our $VERSION = '1.0';
+our $VERSION = '1.0_1';
 our $TRACE = 0;
 our $RAISE_EXCEPTION = 'trap';
 
@@ -762,12 +762,16 @@ sub _processFile
             
         }
             
-        my $table = eval '\\%' . $class . '::';
-        foreach my $item (keys %{$table})
         {
-            if (exists +PROPERTYINDEX->{ $class }->{ $item } || exists +METHODS->{ $class }->{ $item })
+            no strict 'refs';
+            no warnings 'redefine';
+            my $table = eval '\\%' . $class . '::';
+            foreach my $item (keys %{$table})
             {
-                *{ $table->{$item} } = undef;
+                if (exists +PROPERTYINDEX->{ $class }->{ $item } || exists +METHODS->{ $class }->{ $item })
+                {
+                    *{ $table->{$item} } = undef;
+                }
             }
         }
     }

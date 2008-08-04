@@ -34,4 +34,5 @@ lib/POOF/Example/Vehicle/Automobile.pm
 lib/POOF/Example/Vehicle/Bicycle.pm
 lib/POOF/Example/Vehicle/Automobile/NissanXterra.pm
 lib/POOF/Example/Vehicle/Bicycle/BMX.pm
+lib/POOF/Example/SyntaxError.pm
 META.yml                                 Module meta-data (added by MakeMaker)
