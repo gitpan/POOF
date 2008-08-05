@@ -5,6 +5,7 @@ use strict;
 use warnings;
 use Carp;
 use Data::Dumper;
+use Class::ISA;
 
 use Scalar::Util 'refaddr';
 
@@ -266,7 +267,7 @@ sub _setValue
 	}
 	# if we made it here is bacause validation failed and we are
 	# returning undef because we are not in a void context
-	# the caller should check the $obj->GetErrors to see the actual
+	# the caller should check the $obj->pGetErrors to see the actual
 	# error message.
 	return;
 }
@@ -300,9 +301,44 @@ sub _valid
             
 
 
+	# check null
+	if (exists $definition->{'null'} && defined $definition->{'null'})
+	{
+		unless(defined $dat)
+		{
+			# if it can be null and it is null just return 1
+			return 1 if $definition->{'null'} == 1;
+
+			# otherwise, complain that is null and return undef
+			$errors->{ $oid }->{ $property } = 
+            {
+                'code' => 111,
+                'description' => 'NULL test failed',
+                'value' => defined $dat ? $dat : undef
+            };
+			return;
+		}
+	}
+	
     # check type
-    if (exists $definition->{'ptype'} && ref($dat) ne $definition->{'ptype'})
+    if
+	(
+		(
+			   exists $definition->{'type'}
+			&& !(exists +DATATYPES->{ $definition->{'type'} })
+			&& defined $dat
+			&& $obj->_Relationship(ref($dat),$definition->{'type'}) !~ /^(?:self|child)$/
+		)
+		or
+		(
+			   exists $definition->{'ptype'}
+			&& ref($dat) ne $definition->{'ptype'}
+		)
+	)
     {
+        warn "failed type check type = $definition->{'type'}\n";
+        warn "definition: ",Dumper($definition),"\n";
+        
         $errors->{ $oid }->{ $property } = 
         {
             'code' => 101,
@@ -330,25 +366,6 @@ sub _valid
 			return;
         }
     }
-        
-	# check null
-	if (exists $definition->{'null'} && defined $definition->{'null'})
-	{
-		unless(defined $dat)
-		{
-			# if it can be null and it is null just return 1
-			return 1 if $definition->{'null'} == 1;
-
-			# otherwise, complain that is null and return undef
-			$errors->{ $oid }->{ $property } = 
-            {
-                'code' => 111,
-                'description' => 'NULL test failed',
-                'value' => defined $dat ? $dat : undef
-            };
-			return;
-		}
-	}
 	
 	# check regex
 	if (exists $definition->{'regex'} && defined $definition->{'regex'})
@@ -448,16 +465,34 @@ sub Private
 		unless ((caller(0))[0] eq ref($_[0])) && ((caller(1))[0] eq ref($_[0]));
 }
 
-sub Errors
+sub pErrors
 {
 	my ($obj) = @_;
 	return @{ [ keys %{$errors->{ $obj->_objectInstanceID }} ] } || 0;
 }
 
-sub GetErrors
+sub pGetErrors
 {
 	my ($obj) = @_;
 	return $errors->{ $obj->_objectInstanceID } || { };
+}
+
+sub _Relationship
+{
+    my $obj = shift;
+    my ($class1,$class2) = map { $_ ? ref $_ ? ref $_ : $_ : '' } @_;
+
+    return 'self' if $class1 eq $class2;
+
+    my %family1 = map { $_ => 1 } Class::ISA::super_path( $class1 );
+    my %family2 = map { $_ => 1 } Class::ISA::super_path( $class2 );
+
+    return
+        exists $family1{ $class2 }
+            ? 'child'
+            : exists $family2{ $class1 } 
+                ? 'parent' 
+                : 'unrelated';
 }
 
 # we must cleanup and force this instance to undef

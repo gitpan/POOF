@@ -15,7 +15,7 @@ use Class::ISA;
 use POOF::Properties;
 use POOF::DataType;
 
-our $VERSION = '1.0_1';
+our $VERSION = '1.1';
 our $TRACE = 0;
 our $RAISE_EXCEPTION = 'trap';
 
@@ -72,7 +72,7 @@ sub new
     }
     
     my $obj;
-    tie %{$obj}, 'POOF::Properties', \@properties, $class, \&Errors, \+GROUPS, \+PROPBACKREF, @_;
+    tie %{$obj}, 'POOF::Properties', \@properties, $class, \&pErrors, \+GROUPS, \+PROPBACKREF, @_;
     bless $obj,$class;
     
     $obj->{'___refobj___'} = $obj;
@@ -136,7 +136,7 @@ sub _init
 # Error handling
 
 my $ERRORS;
-sub Errors
+sub pErrors
 {
     my $obj = shift;
     my ($k,$e) = @_;
@@ -154,7 +154,7 @@ sub Errors
                     : undef;
 }
 
-sub GetErrors
+sub pGetErrors
 {
     my $obj = shift;
     return
@@ -163,13 +163,13 @@ sub GetErrors
             : { };  
 }
 
-sub AllErrors
+sub pAllErrors
 {
     my ($obj) = @_;
-    return scalar(keys %{$obj->GetAllErrors});
+    return scalar(keys %{$obj->pGetAllErrors});
 }
 
-sub GetAllErrors
+sub pGetAllErrors
 {
     my ($obj,$parent) = @_;
     my $errors = {};
@@ -187,7 +187,7 @@ sub GetAllErrors
             next unless exists $obj->[$i];
             if ($obj->_Relationship(ref($obj->[$i]),'POOF') =~ /^(?:self|child)$/)
             {
-                my $error = $obj->[$i]->GetAllErrors("$parent$i");
+                my $error = $obj->[$i]->pGetAllErrors("$parent$i");
                 %{$errors} = (%{$errors},%{$error})
                     if $error;
             }
@@ -199,14 +199,14 @@ sub GetAllErrors
         {
             if ($obj->_Relationship(ref($obj->{$prop->{'name'}}),'POOF') =~ /^(?:self|child)$/)
             {
-                my $error = $obj->{$prop->{'name'}}->GetAllErrors("$parent$prop->{'name'}");
+                my $error = $obj->{$prop->{'name'}}->pGetAllErrors("$parent$prop->{'name'}");
                 %{$errors} = (%{$errors},%{$error})
                     if $error;
             }
         }
     }
     
-    my $myErrors = $obj->GetErrors;
+    my $myErrors = $obj->pGetErrors;
     map { $errors->{"$parent$_"} = $myErrors->{$_} } keys %{$myErrors};
     return $errors;
 }
@@ -262,21 +262,21 @@ sub pRaiseException
 #-------------------------------------------------------------------------------
 # Group operations
 
-sub GetPropertiesOfGroups
+sub pGetPropertiesOfGroups
 {
     my $obj = shift;
     my %props;
-    @props{ $obj->GetNamesOfGroup(@_) } = $obj->GetValuesOfGroup(@_);
+    @props{ $obj->pGetNamesOfGroup(@_) } = $obj->pGetValuesOfGroup(@_);
     return (%props);
 }
 
-sub GetGroups
+sub pGetGroups
 {
     my ($obj) = @_;
     return (keys %{ +GROUPS->{ ref $obj } });
 }
 
-sub GetNamesOfGroup
+sub pGetNamesOfGroup
 {
     my ($obj,$group) = @_;
     
@@ -286,35 +286,35 @@ sub GetNamesOfGroup
             : (); 
 }
 
-sub Group
+sub pGroup
 {
     my ($obj,$group) = @_;
-    return $obj->GetNamesOfGroup($group);
+    return $obj->pGetNamesOfGroup($group);
 }
 
-sub GroupEncoded
+sub pGroupEncoded
 {
     my ($obj,$group) = @_;
-    return (map { $obj->_encodeFullyQualifyClassName . '-' . $_  }  $obj->GetNamesOfGroup($group));
+    return (map { $obj->_encodeFullyQualifyClassName . '-' . $_  }  $obj->pGetNamesOfGroup($group));
 }
 
-sub PropertyNamesEncoded
+sub pPropertyNamesEncoded
 {
     my ($obj,$refObj,@names) = @_;
     my $class = ref $refObj;
     return (map { $obj->_encodeFullyQualifyClassName($refObj) . '-' . $_  }  @names );
 }
 
-sub GetValuesOfGroup
+sub pGetValuesOfGroup
 {
     my ($obj,$group) = @_;
     return
-        defined $group && $obj->GetNamesOfGroup($group)
-            ? (@{$obj}{ $obj->GetNamesOfGroup($group) })  
+        defined $group && $obj->pGetNamesOfGroup($group)
+            ? (@{$obj}{ $obj->pGetNamesOfGroup($group) })  
             : ();
 }
 
-sub ValidGroupName
+sub pValidGroupName
 {
     my $obj = ref $_[0] ? +shift : undef;
     my ($name) = @_;
@@ -372,7 +372,7 @@ sub pInstantiate
     return
         $obj->pPropertyDefinition($prop)->{'otype'}->new 
         (
-            $obj->GetPropertiesOfGroups('Application'),
+            $obj->pGetPropertiesOfGroups('Application'),
             RaiseException => $POOF::RAISE_EXCEPTION
         );
 }
@@ -382,7 +382,7 @@ sub pReInstantiateSelf
     my ($obj,%args) = @_;
     return
         ref($obj)->new(
-            $obj->GetPropertiesOfGroups('Application'),
+            $obj->pGetPropertiesOfGroups('Application'),
             %args
         );
 }
@@ -916,9 +916,9 @@ POOF - Perl extension that provides stronger typing, encapsulation and inheritan
         
         $obj->{'spouse'} = $new_spouse;
         
-        if ($obj->Errors)
+        if ($obj->pErrors)
         {
-            my $errors = $obj->GetErrors;
+            my $errors = $obj->pGetErrors;
             if (exists $errors->{'spouse'})
             {
                 die "Problems, the marrige is off!! $errors->{'spouse'}\n";
@@ -977,7 +977,7 @@ is crucial behavior and it goes along with how the OO principles have been
 implemented in other popular languages like Java, C# and C++.
 
 
-=head1 Properties
+=head1 Property declaration
 
 Class properties are defined by use of the "Property" function attribute.
 Properties like methods have three levels of access (see. Access Levels) which
@@ -985,31 +985,636 @@ are Public, Protected and Private.  In addition to the various access levels
 properties can be marked as Virtual, which allows them to be overriden in
 sub-clases and gives them visibility through the entire class hierarchy.
 
-=head3 type
-
-=head3 regex
-
-=head3 orm
-
-
-=head1 Property access modifiers
-
-=head1 Property virtual
-
 =head1 Property
 
-=head1 Property
+The "Property" keyword is used as a function attribute to declare a class
+property.  I<B<Property> and B<Method> are mutually exclusive and should never be
+used on the same function.>
+
+Sample usage:
+
+The minimum requirement of a property is be declared with the B<Property>
+function attribute and for it to return a valid hash ref describing at
+least its basic type.  More about types in the B<type> sub-section.
+
+    sub FirstName : Property
+    {
+        {
+            'type' => 'string'
+        }
+    }
+
+Here we combine the B<Property> attribute with the B<Public> access modified.
+Note that order does not matter when combining POOF function attributes.
+
+    sub Color : Public Property
+    {
+        {
+            'type' => 'enum',
+            'options' => [qw(red blue green)]
+        }
+    }
+    
+Here we combine the B<Property> attribute with the B<Protected> and B<Virtual>
+modifiers.
+
+    sub Height : Property Protected Virtual
+    {
+        {
+            'type' => 'float',
+            'min' => 0,
+            'max' => 8,
+        }
+    }
+    
+WRONG: You should never combine B<Property> with B<Method>.
+
+    sub Bad : Property Method
+    {
+        {
+            'type' => 'boolean'
+        }
+    }
+
+=head1 Property definition hash
+
+Properties are declared by the B<Property> function attribute and defined by their
+definition hash.  The definition has allows for various definitions such as I<type>,
+I<default> value, I<min> value, etc.  See the section below for a list of
+possible definitions.
+
+=head2 type
+
+As the name implies defines the type of the property.  POOF has several
+built in basic types, additionaly you can set type to be the namespace (package name)
+of the object you intend to store in the property.
 
 
-=head1 Methods
+For example:
+
+    # Property that will store a DBI object
+    sub Dbh
+    {
+        {
+            'type' => 'DBI::db'
+        }
+    }
+
+If you defined the type to be a namespace (like above) and you try to store an
+object other than 'DBI::db' and error code 101 will be generated.
+
+Below is a list of built-in basic types currently supported by POOF:
+
+=over
+
+=over
+
+=item B<string>
+
+Basic string like in C++ and other strong typed languages. Defaults to ''.
+
+=item B<integer>
+
+Basic integer signed integer where the sign is optional with with up to 15
+digits and must pass the /^-?[0-9]{1,15}$/ regex. Defaults to 0.
+
+=item B<char>
+
+Basic char as in a single character. Defaults to ''.
 
 
+=item B<binary>
+
+This will hold anything. Defaults to ''.
+
+=item B<float>
+
+Basic float and must pass /^(?:[0-9]{1,11}|[0-9]{0,11}\.[0-9]{1,11})$/
+regex. Defaults to '0.0'.
+
+=item B<boolean>
+
+Basic boolean 1 or 0. Defaults to 0.
+
+=item B<blob>
+
+This will hold anything like the B<binary> type. Defaults to undef.
+
+=item B<enum>
+
+Basic enumarated type, its valid options are defined with the
+additional B<options> definition.  See B<options>.
+
+
+=item B<hash>
+
+Basic Perl hash ref. Defaults to {}.
+
+
+=item B<array>
+
+Basic Perl array ref. Defaults to [].
+    
+=item B<code>
+
+Basic Perl code ref. Defaults to undef.
+    
+=back
+
+=back
+
+=head2 regex
+
+Regular expression that needs to return true for value to be considered valid.
+
+The regular expression should be in the form of:
+
+    sub Color : Property Public
+    {
+        {
+            'type' => 'string',
+            'regex' => qr/^(?:red|green|blue)$/i
+        }
+    }
+
+The B<qr> operator allows the regex to be pre-compiled and you can specify additional
+switches like in the case above B<i> for non-case sensitive. 
+Data validation faulure of B<regex> will result in error code 121.
+
+=head2 null
+
+Defines the property to be nullable and allows it to be set to undef. 
+Data validation faulure of B<null> will result in error code 111.
+
+=head2 default
+
+The default value this property should return if it has not be set. 
+
+=head2 size
+
+The size as in length or number of characters (Same as B<minsize>). 
+Data validation faulure of B<size> will result in error code 131.
+
+=head2 minsize
+
+The minimum size or length allowed. 
+Data validation faulure of B<minsize> will result in error code 132.
+
+=head2 maxsize
+
+The maximum size or length allowed. 
+Data validation faulure of B<maxsize> will result in error code 133.
+
+=head2 min
+
+The ninimum numeric value allowed. 
+Data validation faulure of B<min> will result in error code 141.
+
+=head2 max
+
+The maximum numeric value allowed. 
+Data validation faulure of B<max> will result in error code 142.
+
+=head2 format
+
+A format to use on output as you would use in printf or sprintf.
+
+=head2 groups
+
+The optional list of groups the property belongs to.  Although it takes an array
+ref for the list it is normally specified in-line as in the example below:
+
+    sub Age : Property Public
+    {
+        {
+            'type' => 'integer',
+            'min' => 0,
+            'max' => 120,
+            'groups' => [qw(PersonalInfo Profile)]
+        }
+    }
+    
+In the above example the property "Age" belongs to two groups "PersonalInfo" and
+"Profile" and would be return if either of the to groups are called.
+
+For example:
+
+    my @profile_prop_names = $obj->GetNamesOfGroup('PersonalInfo');
+    my @personal_prop_names = $obj->GetNamesOfGroup('Profile');
+
+=head2 options
+
+This is used to define all valid elements or options for the enumerated typed
+property.
+
+For example:
+
+    sub Relationship : Property Public
+    {
+        {
+            'type' => 'enum',
+            'options' => [qw(Parent Self Spouse Children)]
+        }
+    }
+
+=head2 ifilter
+
+ifilter is a callback hook in the form of code ref that executes when a property
+is assigned a value and before we attempt to validate the data.  The code ref
+can be an anonymous subroutine defined in-line or a a ref to a named sub-routine. 
+The filter gets a reference to the object in which they exists along with the
+value that is being set.  The value can be manipulated within the filter and/or
+validated by calling die if one desires to reject the value before it's set.
+
+Note that because you have a reference to the object you also have access to other
+properties from the filter to both set and get, however you must be careful to no
+create an infinit loop by setting or getting values to a property that calls the
+same filter.
+
+For example:
+
+    sub FirstName : Property Public Virtual
+    {
+        {
+            'type' => 'string',
+            'ifilter' => sub
+            {
+                my ($obj,$val) = @_;
+                if ($val)
+                {
+                    # remove end of line char if any
+                    chomp($val);
+                    # trim leading and trailing white spaces
+                    $val =~ s/^\s*|\s*$//;
+                    # make all chars lower case
+                    $val = lc($val);
+                    # make first char upper case
+                    $val =~ s/^([a-z])/uc($1)/e;
+                    # reject it if val contains profanity
+                    die "Failed profanity filter"
+                        if $obj->ContainsPropfanity($val);
+                }
+                return $val;
+            }
+        }
+    }
+    
+Obviously the example above assumes with have a method "ContainsPropfanity" that
+will check the contents of $val and returns true if profanity is detected.  See
+the section on Errors and Exceptions handling for more information on data validation
+violation and handling of die within filters.
+
+=head2 ofilter
+
+This is basically the same as the ifilter except it get executed when the someone
+tries to get the value from the property.
+
+For example:
+
+    my $name = $obj->{'FirstName'};
+
+
+=head1 Method declaration
+
+See B<Method> below.
+
+=head2 Method
+
+Methods are declared using the B<Method> function attribute.  Subroutines marked
+with the B<Method> attribute will be deleted from the symbol table right after
+compilation and their access will be controled by the framework.  All three access
+modifiers (B<Public>, B<Protected> and B<Private>) work with methods as well as the
+B<Virtual> modifier.  See Access Modifiers for more information.
+
+For example:
+
+    sub SayHello : Method Public
+    {
+        my ($obj) = @_;
+        print "Hello world!";
+    }
+
+=head1 Access modifiers
+
+These modifiers control access to both methods and properties.  POOF currently
+supports B<Public>, B<Protected> and B<Private>.  Some additional modifiers are
+in the works so stay tunned.
+
+=head2 Public
+
+Methods and Properties marked as B<Public> can be access by the defining class,
+its children and the outsite world.  This is very much how standard Perl subroutines
+work, therefore using the function attribute <BPublic> is mearly a formalization.
+Method and Properties not marked with any access modifiers will default to B<Public>
+
+=head2 Protected
+
+Methods and Properties marked as B<Protected> will be accesible by the defining
+class and its decendants (children, grand children, etc.) but not from outside
+the class hierarchy.  
+
+=head2 Private
+
+Methods and Properties marked as B<Private> will be accesible only by the defining
+class.  In fact, you can define a B<Private> method in one class, inherit from that
+class and define another B<Private> method in the child class and not have a conflict.
+Each class will use its version of the method.  Very useful when you want to control
+what gets inherited.
+
+=head1 Other declarative modifiers
+
+=head2 Virtual
+
+This is a bit more tricky, documentation comming soon.
+
+=head1 Utility Methods and Functions
+
+POOF provides a series utility methods and fuctions listed below, all but B<new>
+(the constructor) and B<_init> the instance inititalization function are prefixed
+with a "p" in order not to polute your namespace too much.  This allows you to have
+your own "Errors" method as the POOF one is called "pErrors" and so son...
+
+Note: Currently some of these methods also exist in POOF without the "p" and I'm
+working to removed then in a timely manner.
+
+=head2 new
+
+The standard Perl constructor, a bit of processing is done in the constructor so
+you should not override it.  If you need to do things in the constructor override
+the B<_init> method instead.  You've been warned :) 
+
+=head2 _init
+
+This is a safe place where you can do things right after the object has been
+instantiated.  Things normally done here include processing constructor arguments,
+setting of default values, etc..
+
+=head2 pErrors
+
+Returns and integer representing the number of errors or exceptions currently in
+the exception tree.  Whenever data validation on a property fails an exception or
+error is stored for the instance in question and the number of such errors can be
+retrieved by calling this method.
+
+For example:
+
+    #-------------------------------
+    # on ColorTest.pm
+    package ColorTest;
+    use base qw(POOF);
+    sub Color : Property Public Virtual
+    {
+        {
+            'type' => 'enum',
+            'options' => [qw(red green blue)]
+        }
+    }
+    1;
+    
+    #-------------------------------
+    # on test.pl
+    #!/usr/bin/perl -w
+    
+    use strict;
+    use ColorTest;
+    
+    my $obj = ColorTest->new;
+    $obj->{'Color'} = 'orange';
+    print "We have " . $obj->pErrors . " error\n";
+    
+The above example should print "We have 1 error";
+
+=head2 pGetErrors
+
+Returns a hash indexed by the name of the property that generated the error,
+an error code, a description string for th error and the offending value that
+cause the error.
+
+For example:
+
+    #-------------------------------
+    # on ColorTest.pm
+    package ColorTest;
+    use base qw(POOF);
+    sub Color : Property Public Virtual
+    {
+        {
+            'type' => 'enum',
+            'options' => [qw(red green blue)]
+        }
+    }
+    1;
+    
+    #-------------------------------
+    # on test.pl
+    #!/usr/bin/perl -w
+    
+    use strict;
+    use ColorTest;
+    
+    my $obj = ColorTest->new;
+    $obj->{'Color'} = 'orange';
+    print "Errors: ",Dumper($obj->pGetErrors);
+
+    # this should print something like this:
+    Errors: $VAR1 = {
+        'Color' => {
+            'value' => 'orange',
+            'description' => 'Not a valid options for this enumerated property',
+            'code' => 151
+        }
+    };
+
+=head2 pGetAllErrors
+
+Like B<pGetErrors> above this method returns errors with their property name, code
+and description but it does so recursively across any contained objects.
+
+For example:
+
+    class Car contains class engine stored in the Engine property.  
+    
+    #-------------------------------
+    # in Car.pm
+    package Car;
+    
+    use strict;
+    use base qw(POOF);
+    use Engine;
+    
+    sub _init
+    {
+        my $obj = shift;
+        # make sure we call super so it does its thing
+        my %args = $obj->SUPER::_init(@_);
+        
+        $obj->{'Engine'} = Engine->new;
+        
+        $obj->{'Engine'}->{'State'} = 'stoped';
+        
+        # make sure we return %args to if some inherits from us
+        # and they call super to get their args they get what its expected.
+        return %args;
+    }
+    
+    sub Engine : Property Public
+    {
+        {
+            'type' => 'Engine'
+        }
+    }
+    1;
+    
+    #-------------------------------
+    # in Engine.pm
+    package Engine;
+    
+    use strict;
+    use base qw(POOF);
+    
+    sub State : Property Public
+    {
+        {
+            'type' => 'enum',
+            'options' => ["running","stoped"],
+        }
+    }
+    1;
+    
+    #-------------------------------
+    # in test.pl
+    #!/usr/bin/perl -w
+    
+    use strict;
+    use Car;
+    use Data::Dumper;
+    
+    my $car = Car->new;
+    
+    $car->{'Engine'}->{'State'} = 'please stop';
+    
+    print "Errors: ",Dumper($car->pGetAllErrors);
+    
+    # should print something like this:
+    Errors: $VAR1 = {
+        'Engine-State' => {
+            'value' => 'please stop',
+            'description' => 'Not a valid options for this enumerated property',
+            'code' => 151
+        }
+    };  
+    
+Note: property names are encoded with a dash to depict the containment level.
+In the example above "Engine-State" is "Engine" the name of the property containing
+the object and "State" the name of the property containing the error condition.
+    
+=head2 pGetGroups
+
+Returns a list of all the property groups defined.
+
+=head2 pGetPropertiesOfGroups
+
+Returns a hash indexed by the property names and containing the properties values.
+
+=head2 pGetNamesOfGroup
+
+Returns the names of the properties belonging to the specified group in the order
+in which they where defined.
+
+For example:
+
+    my @prop_names = $obj->pGetNamesOfGroup('somegroupname');
+
+=head2 pGroup
+
+Same as pGetNamesOfGroup.  I use this method quite often so I made a shortcut :).
+
+=head2 pGroupEncoded
+
+Same as B<pGetNamesOfGroup> but the names are encoded using the namespace of the
+class defining the property.
+
+For example:
+
+    # in a class named 'MyClasses::ThisClass' with a property named 'MyProp'
+
+    print $obj->pGetGroupEncoded;
+    
+    # should print something like this:
+    MyClass-ThisClass-MyProp
+    
+This is useful in some scenarios, more about this type of stuff some other time.
+
+=head2 pPropertyNamesEncoded
+
+Takes a in a reference of a POOF object and a list of property names and returns
+a list of the names encoded as in B<pGroupEncoded>.
+
+=head2 pGetValuesOfGroup
+
+Takes in a group name and returns a list of the values of all the properties
+that belong to that group.
+
+=head2 pValidGroupName
+
+Takes a group name and returns 1 if it's valid and 0 if it's not.
+
+=head2 pSetPropertyDeeply
+
+Takes in a reference to a POOF object, a value and a list of levels normally
+property names. It will use traverse the object model recursively and set the
+leaf node to the value.
+
+For example:
+
+    $obj->pSetPropertyDeeply($refObj,'stopped','Engine','State');
+    
+    # which is the same as:
+    
+    $refObj->{'Engine'}->{'State'} = 'stopped';
+
+=head2 pGetPropertyDeeply
+
+This the counter part to B<pSetPropertyDeeply>, but it gets the value instead.
+
+For example:
+
+    $obj->pGetPropertyDeeply($refObj,'Engine','State');
+    
+    # which is the same as:
+    
+    my $value = $refObj->{'Engine'}->{'State'};
+
+=head2 pIntantiate
+
+Takes in a property name and returns an new instance of the property's contained
+object.  Useful for traversing object that countain other objects, currently used
+by the Encoder class.
+
+=head2 pReInstantitateSelf
+
+Takes in an optional hash to use as constructor arguments and returns a new
+instance of its self prepopulated with the args.
+
+=head2 pPropertyEnumOptions
+
+Takes in a property name and returns an array ref with their valid options.
+It will blow up calling confess if you pass it a property name that does not
+exist.
+
+=head2 pPropertyDefinition
+
+Takes in a property name and returns the definition hash for this property.
 
 =head1 EXPORT
 
 None.
 
 
+=head1 TODO
+
+Many, many things, but first we need to finished the documentation and tutorials
+of the existing classes.  Beyond that better diagnostics is next on the list.
 
 =head1 SEE ALSO
 
@@ -1024,7 +1629,7 @@ me at bmillares@cpan.org.
 
 =head1 AUTHOR
 
-Benny Millares<lt>bmillares@cpan.org<gt>
+Benny Millares <bmillares@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
@@ -1035,4 +1640,5 @@ it under the same terms as Perl itself, either Perl version 5.8.8 or,
 at your option, any later version of Perl 5 you may have available.
 
 =cut
+
 

@@ -13,7 +13,7 @@ sub _init : Method Protected
     my $obj = shift;
     my %args = @_;
     
-    my @dkeys = grep { defined $args{$_} } $obj->Group('Init');
+    my @dkeys = grep { defined $args{$_} } $obj->pGroup('Init');
     @$obj{ @dkeys } = @args{ @dkeys }; 
 }
 
@@ -81,7 +81,7 @@ sub CreateEncodingMap : Method Protected
         # let's make sure we only process once
         next if $obj->{'SeenGroups'}->{ $parent ? "$parent-$group" : $group }++;
             
-        my @props = eval { ($ref->Group($group)) };
+        my @props = eval { ($ref->pGroup($group)) };
         confess "parent $parent\n$@\n" if $@;
         
         foreach my $prop (@props)
@@ -149,7 +149,7 @@ sub CreateEncodingMap : Method Protected
                     'value'     => $ref->{$prop},
                     'class'     => ref($ref),
                     'poof'      => $obj->IsPOOFObj($ref,$prop),
-                    'error'     => $ref->GetErrors->{$prop}
+                    'error'     => $ref->pGetErrors->{$prop}
                 };
             }
             else

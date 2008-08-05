@@ -6,3 +6,5 @@ Revision history for Perl extension POOF.
         
 1.0   Many changes and new features, more info to come in the future.
 
+1.1   Cleanup and added documentation. Changed most POOF methods to be prefixed with "p".
+

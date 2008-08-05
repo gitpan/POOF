@@ -31,7 +31,7 @@ sub description : Property Public Virtual
 sub value : Property Public Virtual
 {
     {
-        'type' => 'scalar',
+        'type' => 'string',
         'default' => undef,
         'null' => 1,
         'groups' => [qw(Init)],
@@ -47,7 +47,7 @@ sub _init
     my %args = $obj->SUPER::_init( @_ );
 
     # poplulate known form properties passed to the constructor if they are defined
-    @{$obj}{ $obj->Group('Init') } = @args{ $obj->Group('Init') };
+    @{$obj}{ $obj->pGroup('Init') } = @args{ $obj->pGroup('Init') };
 
     return (%args);
 }

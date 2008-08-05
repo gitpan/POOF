@@ -64,7 +64,7 @@ sub new
     };
 
     my $obj;
-    tie @{$obj}, 'POOF::Properties::Array', $def, $class, \&POOF::Errors, \+PROPBACKREF;
+    tie @{$obj}, 'POOF::Properties::Array', $def, $class, \&POOF::pErrors, \+PROPBACKREF;
     bless $obj,$class;
     +PROPBACKREF->{ $class }->RefObj($obj);
     

@@ -47,7 +47,7 @@ ok(($integer->value == 100
     ? 1
     : 0 ), 'Checking that the value is still [100]' );
 
-ok(($integer->Errors == 1
+ok(($integer->pErrors == 1
     ? 1
     : 0 ), 'Checking that an error was registered correctly');
 
@@ -97,9 +97,9 @@ ok(($boolean->value == 1
     ? 1
     : 0 ), 'Checking that the value is still [1]' );
 
-ok(($boolean->Errors == 1
+ok(($boolean->pErrors == 1
     ? 1
-    : 0 ), 'Checking that an error was registered correctly [' . $boolean->Errors . ']');
+    : 0 ), 'Checking that an error was registered correctly [' . $boolean->pErrors . ']');
 
 
 

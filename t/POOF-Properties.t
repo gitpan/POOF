@@ -19,7 +19,7 @@ use POOF::DataType;
 our $errors = {};
 
 my $self = 'main';
-my $ExceptionHandler = \&Errors;
+my $ExceptionHandler = \&pErrors;
 my $RaiseException = 'trap';
 my $hash = {};
 my $definitions =
@@ -141,7 +141,7 @@ ok((
 $hash->{'Weight'} = 'some illegal value';
 
 ok((
-    Errors() == 1 && exists &GetErrors->{ 'Weight' }
+    pErrors() == 1 && exists &pGetErrors->{ 'Weight' }
         ? 1
         : 0 ), 'Checking the exception mechanism'); 
 
@@ -161,7 +161,7 @@ ok((
 
 # check make sure it does not generate an error
 ok((
-    not exists &GetErrors->{ 'Gender' }
+    not exists &pGetErrors->{ 'Gender' }
         ? 1
         : 0 ), "Check that we don't have errors when setting to a valid value"); 
 
@@ -188,13 +188,13 @@ $hash->{'Gender'} = 'Invalid';
 
 # check and make sure it generated the appropriate error
 ok((
-    exists &GetErrors->{ 'Gender' }
+    exists &pGetErrors->{ 'Gender' }
         ? 1
         : 0 ), "Check that we have expected error when setting to an invalid value"); 
 
 
 our $ERRORS = {};
-sub Errors
+sub pErrors
 {
     my ($obj,$k,$e) = @_;
     return scalar keys %{$ERRORS} if scalar @_ <= 1;
@@ -203,7 +203,7 @@ sub Errors
     return;
 }
 
-sub GetErrors
+sub pGetErrors
 {
     return
         ref $ERRORS

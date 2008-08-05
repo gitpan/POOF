@@ -453,9 +453,9 @@ sub STORE
     $d->value( $v );
     
     # handle any possible errors
-    if ($d->Errors)
+    if ($d->pErrors)
     {
-        &{$obj->{'exceptionHandler'}}($obj->{'___refobj___'},$k,$d->GetErrors->{'value'})
+        &{$obj->{'exceptionHandler'}}($obj->{'___refobj___'},$k,$d->pGetErrors->{'value'})
             if defined $obj->{'exceptionHandler'};
 
         return;
