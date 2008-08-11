@@ -1,15 +1,14 @@
 package POOF::DataType;
 
-use 5.006;
+use 5.007;
 use strict;
 use warnings;
 use Carp;
-use Data::Dumper;
 use Class::ISA;
 
 use Scalar::Util 'refaddr';
 
-our $VERSION = '0.01';
+our $VERSION = '1.0';
 
 #-------------------------------------------------------------------------------
 
@@ -336,9 +335,6 @@ sub _valid
 		)
 	)
     {
-        warn "failed type check type = $definition->{'type'}\n";
-        warn "definition: ",Dumper($definition),"\n";
-        
         $errors->{ $oid }->{ $property } = 
         {
             'code' => 101,
@@ -503,3 +499,29 @@ sub DESTROY
 
 1;
 __END__
+
+=head1 NAME
+
+POOF::DataType - Provides data type validation and enforcement to POOF.
+
+=head1 SYNOPSIS
+
+It is not meant to be used directly.
+  
+=head1 SEE ALSO
+
+POOF man page.
+
+=head1 AUTHOR
+
+Benny Millares <bmillares@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Benny Millares
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

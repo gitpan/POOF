@@ -9,8 +9,6 @@ use POOF::Example::Lock;
 use POOF::Example::Engine;
 use POOF::Example::Wheels;
 
-use Data::Dumper;
-
 #-------------------------------------------------------------------------------
 # init 
 
@@ -41,23 +39,16 @@ sub Wheels : Property Public
         'type' => 'POOF::Example::Wheels',
         'ofilter' => sub
         {
-            #warn "ofilter";
             my ($obj,$val) = @_;
-            #warn "val: ",Dumper($val),"\n";
             unless($val)
             {
-                #warn "Trying to instantiate wheels";
                 my $wheels = POOF::Example::Wheels->new(
                     'name'      => 'Wheels',
                     'access'    => 'Public',
                     'otype'     => 'POOF::Example::Wheel',
                     'maxsize'   => 4,
                 );
-                #warn "wheels ",Dumper($wheels);
-                #warn "x"x50 . "\n";
                 $obj->{'Wheels'} = $wheels;
-                #warn "x"x50 . "\n";
-                #warn "Life after assignment\n";
                 return $wheels;
             }
             return $val;
@@ -141,3 +132,30 @@ sub StopEngine : Method Public
 
 
 1;
+__END__
+
+=head1 NAME
+
+POOF::Example::Vehicle::Automobile - Sample class to illustrate POOF.
+
+=head1 SYNOPSIS
+
+Todo
+  
+=head1 SEE ALSO
+
+POOF man page.
+
+=head1 AUTHOR
+
+Benny Millares <bmillares@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Benny Millares
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

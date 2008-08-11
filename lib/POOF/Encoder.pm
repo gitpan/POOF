@@ -1,12 +1,13 @@
 package POOF::Encoder;
 
+use 5.007;
 use strict;
 use base qw(POOF);
 use Tie::IxHash;
 use Class::ISA;
 use Carp qw(confess);
 
-use Data::Dumper;
+our $VERSION = '1.0';
 
 sub _init : Method Protected
 {
@@ -155,7 +156,6 @@ sub CreateEncodingMap : Method Protected
             else
             {
                 warn "Error: $prop is not a simple property and I don't know what do to with it\n";
-                warn Dumper($ref->{$prop}),"\n";
             }
         }
         
@@ -203,3 +203,29 @@ sub IsPOOFObj
 
 1;
 __END__
+
+=head1 NAME
+
+POOF::Encoder - Utility class used by POOF.
+
+=head1 SYNOPSIS
+
+It is not meant to be used directly.
+  
+=head1 SEE ALSO
+
+POOF man page.
+
+=head1 AUTHOR
+
+Benny Millares <bmillares@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Benny Millares
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut

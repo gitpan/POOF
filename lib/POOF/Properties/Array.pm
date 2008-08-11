@@ -1,17 +1,15 @@
 package POOF::Properties::Array;
 
-use 5.006;
+use 5.007;
 use strict;
 use warnings;
 
-use Data::Dumper qw(Dumper);
 use Carp qw(croak confess);
-
 use base qw(POOF::Properties);
 
 use POOF::DataType;
 
-our $VERSION = '0.01';
+our $VERSION = '1.0';
 
 my %DEFINITION;
 
@@ -362,7 +360,7 @@ sub _callerContext
             ? 0                         # 'private' 
             : $relationship eq 'child'
                 ? 1                     # 'protected'
-                : $relationship eq 'parent'
+                : $relationship eq 'parent' 
                     ? -1                 # parent has not visibility into children
                     : 2                 # 'public';
                     
@@ -397,7 +395,7 @@ sub _classOrChild
         $relationship eq 'self'
             ? 1                         # 'private'  
             : $relationship eq 'child'
-                ? 1                     # 'protected'
+                ? 1                     # 'protected' 
                 : $relationship eq 'parent'
                     ? 1                 # parent has visibility into children
                     : 0                 # 'public';
@@ -416,3 +414,30 @@ sub _enforcement
 
 1;
 __END__
+
+=head1 NAME
+
+POOF::Properties::Array - Utility class used by POOF::Collection.
+
+=head1 SYNOPSIS
+
+It is not meant to be used directly.
+  
+=head1 SEE ALSO
+
+POOF man page.
+
+=head1 AUTHOR
+
+Benny Millares <bmillares@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2007 by Benny Millares
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
+=cut
+

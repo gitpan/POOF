@@ -14,8 +14,6 @@ BEGIN { use_ok('POOF::Example::Engine') };
 eval q|
 $POOF::TRACE = 0;
 
-use Data::Dumper;
-
 my $car = POOF::Example::Vehicle::Automobile::NissanXterra->new;
 my $key = POOF::Example::Key->new;
 my $engine = POOF::Example::Engine->new;

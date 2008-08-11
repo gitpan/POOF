@@ -15,7 +15,6 @@ BEGIN { use_ok('POOF::Properties::Array', 'Module failed to load') };
 # its man page ( perldoc Test::More ) for help writing this test script.
 
 use POOF::DataType;
-use Data::Dumper;
 
 our $errors = {};
 

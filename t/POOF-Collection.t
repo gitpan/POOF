@@ -16,8 +16,6 @@ BEGIN { use_ok('POOF::Example::Wheels') };
 
 $POOF::TRACE = 0;
 
-use Data::Dumper;
-
 my $t1 =
 [
     POOF::Example::Vehicle::Automobile::NissanXterra->new,

@@ -3,7 +3,6 @@
 
 #########################
 use Test::More;
-use Data::Dumper;
 BEGIN
 {
     plan tests => 20;
