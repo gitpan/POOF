@@ -14,7 +14,7 @@ use Class::ISA;
 use POOF::Properties;
 use POOF::DataType;
 
-our $VERSION = '1.2';
+our $VERSION = '1.3';
 our $TRACE = 0;
 our $RAISE_EXCEPTION = 'trap';
 
@@ -1763,6 +1763,14 @@ Documentation for this module is a work in progress.  I hope to be able to
 dedicate more time and created a more comprehensive set of docs in the near
 future.  Anyone interested in helping with the documentation, please contact
 me at bmillares@cpan.org.
+
+=head1 Special Thank You
+
+I'd would like to take this opportunity to thank my friends, Buddy Burden,
+Alain Avakian, John Callender, Diane Xu, Matthew Silvera and Dave Trischuk for
+their support and valuable input which has help shape the direction of this module.
+
+You guys rock!
 
 =head1 AUTHOR
 
