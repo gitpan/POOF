@@ -14,7 +14,7 @@ use Class::ISA;
 use POOF::Properties;
 use POOF::DataType;
 
-our $VERSION = '1.3';
+our $VERSION = '1.4';
 our $TRACE = 0;
 our $RAISE_EXCEPTION = 'trap';
 
@@ -410,10 +410,10 @@ sub pPropertyDefinition
 our $AUTOLOAD;
 sub AUTOLOAD
 {
-	my $obj = shift;
+        my $obj = shift;
     
-	my $name = $AUTOLOAD;
-	$name =~ s/.*://;   # strip fully-qualified portion
+        my $name = $AUTOLOAD;
+        $name =~ s/.*://;   # strip fully-qualified portion
     
     my $super =
         $AUTOLOAD =~ /\:SUPER\:/o
@@ -425,7 +425,7 @@ sub AUTOLOAD
     # TDB: handle super correctly, if the parent does not have the method
     # then try his parent and so on until we hit the top, if no method
     # is found then throw and exeption.
-	my $package =
+        my $package =
         $super
             ? shift @{[ Class::ISA::super_path( $class ) ]}  
             : $class;
@@ -462,7 +462,7 @@ sub AUTOLOAD
         exists ACCESSLEVEL->{ $access }
             ? ACCESSLEVEL->{ $access }
             : ACCESSLEVEL->{ 'Public' };
-	
+        
     my $context = $obj->_AccessContext;
 
     confess "Illegal access of method $name"
@@ -637,9 +637,13 @@ sub _processFile
     my $source;
     my $exception;
     
-    # try to open the file for reading or die with stack trace
+    # read source from file and untaint it
     open(SOURCEFILE,$filename) || confess "Could not open $filename\n";
-    { local $/ = undef; $source = <SOURCEFILE>; }
+    {
+        local $/ = undef;
+        <SOURCEFILE> =~ /(.*)/ms;  # put untainted code in $1
+        $source = $1;
+    }
     close(SOURCEFILE);
     
     # let's rename the packages so we don't brack perl's inheritance stuff

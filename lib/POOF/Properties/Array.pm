@@ -58,11 +58,14 @@ sub _init
     # make sure all keys are lower case
     %{$obj->{'def'}} = map { lc($_) => $def->{ $_ } } keys %{$def};
     
-    my $access = $obj->{'def'}->{'access'};
+    my $access =
+        exists $obj->{'def'}->{'access'} && defined $obj->{'def'}->{'access'}
+            ? $obj->{'def'}->{'access'}
+            : '';
     
     $obj->{'def'}->{'access'} =
         $access
-            ? exists +ACCESSLEVEL->{ $access }  
+            ? exists +ACCESSLEVEL->{ $access } 
                 ? +ACCESSLEVEL->{ $access }   
                 : confess "Unkown access type: $access" 
             : $obj->{'def'}->{'name'} eq DUMMY

@@ -66,6 +66,40 @@ sub CreateEncodedKeysForGroups : Method Public
     );
 }
 
+
+sub CreateEncodedKeysAndTypesForGroups : Method Public
+{
+    my ($obj,@groups) = @_;
+    
+    # reset the seen
+    $obj->{'SeenProps'} = {};
+    $obj->{'SeenGroups'} = {};
+    
+    tie (my %fullmap, 'Tie::IxHash');
+    
+    %fullmap = $obj->CreateEncodingMap
+    (
+        $obj->{'Object'},
+        [@groups]
+    );
+    
+    my @tuples;
+    
+    map
+    {
+        push
+        (
+            @tuples,
+            {
+                'key' => $_,
+                'obj' => $fullmap{$_}
+            }
+        )
+    } keys %fullmap;
+
+    return @tuples;
+}
+
 sub CreateEncodingMap : Method Protected
 {
     my ($obj,$ref,$groups,$parent) = @_;
@@ -83,7 +117,11 @@ sub CreateEncodingMap : Method Protected
         next if $obj->{'SeenGroups'}->{ $parent ? "$parent-$group" : $group }++;
             
         my @props = eval { ($ref->pGroup($group)) };
-        confess "parent $parent\n$@\n" if $@;
+        if($@)
+        {
+            warn "Error in Encoder: parent $parent\n$@\n";
+            warn "ref: ",Dumper($ref),"\n";
+        }
         
         foreach my $prop (@props)
         {
@@ -113,7 +151,7 @@ sub CreateEncodingMap : Method Protected
                     [
                         $ref->{$prop}->[0]->pReInstantiateSelf
                         (
-                            RaiseException=>$POOF::RaiseException
+                            RaiseException=>$POOF::RAISE_EXCEPTION
                         ),                    # new ref
                         $groups,              # groups to look at
                         "$parent-$prop-|",    # new parent
@@ -149,6 +187,7 @@ sub CreateEncodingMap : Method Protected
                     'name'      => $prop,
                     'value'     => $ref->{$prop},
                     'class'     => ref($ref),
+                    'type'      => $ref->pPropertyDefinition($prop)->{'type'},
                     'poof'      => $obj->IsPOOFObj($ref,$prop),
                     'error'     => $ref->pGetErrors->{$prop}
                 };
